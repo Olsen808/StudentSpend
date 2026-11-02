@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudentSpend - a simple student expense tracker.">
+  <title>StudentSpend | Expense Tracker</title>
+  <style>
+    :root {
+      --ink: #17233b; --muted: #68758b; --line: #e6eaf0;
+      --blue: #3157d5; --blue-soft: #edf1ff; --green: #16865b;
+      --red: #c54b4b; --surface: #ffffff; --bg: #f5f7fb;
+      --shadow: 0 8px 28px rgba(27, 43, 75, .06);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; background: var(--bg); color: var(--ink); }
+    button, input, select { font: inherit; }
+    .app { max-width: 1120px; margin: 0 auto; padding: 28px 22px 56px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .logo { width:42px; height:42px; border-radius:13px; display:grid; place-items:center; color:white; background:var(--blue); font-weight:800; font-size:19px; }
+    h1 { font-size:21px; margin:0; letter-spacing:-.5px; }
+    .tagline { margin:3px 0 0; color:var(--muted); font-size:13px; }
+    .month { color:var(--muted); font-size:14px; font-weight:600; }
+    .intro { margin:0 0 20px; }
+    .intro h2 { margin:0 0 6px; font-size:25px; letter-spacing:-.7px; }
+    .intro p { margin:0; color:var(--muted); font-size:14px; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:18px; }
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); }
+    .stat { padding:19px 20px; }
+    .stat-label { color:var(--muted); font-size:13px; font-weight:600; }
+    .stat-value { font-size:27px; font-weight:750; letter-spacing:-.8px; margin:9px 0 4px; }
+    .stat-note { font-size:12px; color:var(--muted); }
+    .budget-wrap { padding:19px 20px; margin-bottom:18px; }
+    .budget-top { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .budget-top h3, .section-head h3 { margin:0; font-size:15px; }
+    .budget-caption { color:var(--muted); font-size:12px; margin-top:5px; }
+    .budget-edit { border:0; color:var(--blue); background:var(--blue-soft); padding:8px 11px; border-radius:9px; cursor:pointer; font-weight:650; font-size:12px; }
+    .progress { height:9px; background:#edf0f5; border-radius:99px; overflow:hidden; margin-top:16px; }
+    .progress > div { height:100%; width:0; background:var(--blue); border-radius:99px; transition:width .2s; }
+    .progress > div.over { background:var(--red); }
+    .content { display:grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.85fr); gap:18px; align-items:start; }
+    .panel { padding:20px; }
+    .section-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px; }
+    .section-head span { color:var(--muted); font-size:12px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field.full { grid-column:1/-1; }
+    label { font-size:12px; color:#526078; font-weight:650; }
+    input, select { width:100%; border:1px solid #dfe4ec; background:#fff; border-radius:10px; padding:11px 12px; color:var(--ink); outline:none; }
+    input:focus, select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(49,87,213,.1); }
+    .primary { border:0; border-radius:10px; padding:12px 15px; background:var(--blue); color:white; cursor:pointer; font-weight:700; width:100%; margin-top:14px; }
+    .primary:hover { filter:brightness(.96); }
+    .filters { display:flex; gap:9px; margin-bottom:12px; }
+    .filters select { max-width:180px; padding:9px 10px; font-size:12px; }
+    .transactions { display:flex; flex-direction:column; }
+    .transaction { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:13px 0; border-top:1px solid var(--line); }
+    .transaction:first-child { border-top:0; }
+    .tx-left { display:flex; align-items:center; gap:11px; min-width:0; }
+    .tx-icon { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:var(--blue-soft); font-size:17px; flex:none; }
+    .tx-name { font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+    .tx-meta { color:var(--muted); font-size:11px; margin-top:4px; }
+    .tx-right { text-align:right; flex:none; }
+    .tx-amount { font-weight:750; font-size:13px; }
+    .delete { display:block; border:0; background:none; color:var(--red); font-size:11px; cursor:pointer; padding:5px 0 0; margin-left:auto; }
+    .empty { text-align:center; color:var(--muted); padding:30px 10px; font-size:13px; }
+    .notice { min-height:18px; margin-top:9px; font-size:12px; color:var(--red); }
+    footer { color:var(--muted); font-size:11px; text-align:center; margin-top:25px; }
+    @media (max-width:760px) { .content { grid-template-columns:1fr; } }
+    @media (max-width:560px) {
+      .app { padding:20px 14px 40px; } header { align-items:flex-start; }
+      .stats { grid-template-columns:1fr; gap:10px; }
+      .stat { padding:15px 17px; } .stat-value { font-size:24px; }
+      .form-grid { grid-template-columns:1fr; } .field.full { grid-column:auto; }
+      .month { font-size:12px; text-align:right; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">S</div>
+        <div><h1>StudentSpend</h1><p class="tagline">Make every euro count.</p></div>
+      </div>
+      <div class="month" id="monthLabel"></div>
+    </header>
+
+    <section class="intro">
+      <h2>Your money, made clearer.</h2>
+      <p>Track your spending and keep an eye on your monthly budget.</p>
+    </section>
+
+    <section class="stats" aria-label="Monthly summary">
+      <article class="card stat">
+        <div class="stat-label">Spent this month</div>
+        <div class="stat-value" id="spentValue">€0.00</div>
+        <div class="stat-note">Your recorded expenses</div>
+      </article>
+      <article class="card stat">
+        <div class="stat-label">Monthly budget</div>
+        <div class="stat-value" id="budgetValue">€500.00</div>
+        <div class="stat-note">Your spending limit</div>
+      </article>
+      <article class="card stat">
+        <div class="stat-label">Budget remaining</div>
+        <div class="stat-value" id="remainingValue">€500.00</div>
+        <div class="stat-note" id="remainingNote">Available to spend</div>
+      </article>
+    </section>
+
+    <section class="card budget-wrap">
+      <div class="budget-top">
+        <div><h3>Monthly budget progress</h3><div class="budget-caption" id="budgetCaption">0% of your budget used</div></div>
+        <button class="budget-edit" id="editBudget" type="button">Edit budget</button>
+      </div>
+      <div class="progress" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><div id="progressFill"></div></div>
+    </section>
+
+    <section class="content">
+      <article class="card panel">
+        <div class="section-head"><h3>Recent expenses</h3><span id="countLabel">0 entries</span></div>
+        <div class="filters">
+          <select id="filterCategory" aria-label="Filter by category">
+            <option value="All">All categories</option>
+            <option>Food</option><option>Transport</option><option>Housing</option>
+            <option>Study</option><option>Entertainment</option><option>Other</option>
+          </select>
+          <select id="filterMonth" aria-label="Filter by month">
+            <option value="current">This month</option><option value="all">All time</option>
+          </select>
+        </div>
+        <div class="transactions" id="transactionList" aria-live="polite">
+          <div class="empty">No expenses yet. Add your first expense to get started.</div>
+        </div>
+      </article>
+
+      <aside class="card panel">
+        <div class="section-head"><h3>Add an expense</h3></div>
+        <form id="expenseForm" novalidate>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="description">Description</label>
+              <input id="description" name="description" maxlength="50" placeholder="e.g. Groceries" required>
+            </div>
+            <div class="field">
+              <label for="amount">Amount (€)</label>
+              <input id="amount" name="amount" type="number" min="0.01" max="100000" step="0.01" placeholder="0.00" required>
+            </div>
+            <div class="field">
+              <label for="category">Category</label>
+              <select id="category" name="category" required>
+                <option value="Food">Food</option><option value="Transport">Transport</option>
+                <option value="Housing">Housing</option><option value="Study">Study</option>
+                <option value="Entertainment">Entertainment</option><option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="date">Date</label>
+              <input id="date" name="date" type="date" required>
+            </div>
+          </div>
+          <button class="primary" type="submit">Add expense</button>
+          <div class="notice" id="formNotice" role="alert"></div>
+        </form>
+      </aside>
+    </section>
+    <footer>Your data is saved in this browser on this device. This demo does not connect to a bank account.</footer>
+  </main>
+
+<script>
+(() => {
+  const STORAGE_KEY = "studentSpend.v1.expenses";
+  const BUDGET_KEY = "studentSpend.v1.budget";
+  const categories = {
+    Food: "🛒", Transport: "🚌", Housing: "🏠",
+    Study: "📚", Entertainment: "🎬", Other: "📌"
+  };
+  const $ = (id) => document.getElementById(id);
+  let expenses = loadExpenses();
+  let budget = loadBudget();
+
+  function loadExpenses() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(saved) ? saved.filter(x =>
+        x && typeof x.id === "string" && typeof x.description === "string" &&
+        Number.isFinite(Number(x.amount)) && Number(x.amount) > 0 &&
+        categories[x.category] && /^\d{4}-\d{2}-\d{2}$/.test(x.date)
+      ) : [];
+    } catch { return []; }
+  }
+  function loadBudget() {
+    const saved = Number(localStorage.getItem(BUDGET_KEY));
+    return Number.isFinite(saved) && saved > 0 ? saved : 500;
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+    localStorage.setItem(BUDGET_KEY, String(budget));
+  }
+  function monthKey(date) { return date.slice(0, 7); }
+  function currentMonth() { return new Date().toISOString().slice(0, 7); }
+  function euro(value) {
+    return new Intl.NumberFormat("de-DE", { style:"currency", currency:"EUR" }).format(value);
+  }
+  function monthExpenses() { return expenses.filter(x => monthKey(x.date) === currentMonth()); }
+  function render() {
+    const current = monthExpenses();
+    const spent = current.reduce((sum, x) => sum + Number(x.amount), 0);
+    const remaining = budget - spent;
+    const percent = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+    $("monthLabel").textContent = new Intl.DateTimeFormat("en-GB", {month:"long", year:"numeric"}).format(new Date());
+    $("spentValue").textContent = euro(spent);
+    $("budgetValue").textContent = euro(budget);
+    $("remainingValue").textContent = euro(remaining);
+    $("remainingValue").style.color = remaining < 0 ? "var(--red)" : "var(--ink)";
+    $("remainingNote").textContent = remaining < 0 ? "You are over budget" : "Available to spend";
+    $("budgetCaption").textContent = `${Math.round(spent / budget * 100)}% of your budget used`;
+    $("progressFill").style.width = `${percent}%`;
+    $("progressFill").classList.toggle("over", spent > budget);
+    $("progressBar").setAttribute("aria-valuenow", String(Math.round(percent)));
+    renderTransactions();
+  }
+  function renderTransactions() {
+    const category = $("filterCategory").value;
+    const monthFilter = $("filterMonth").value;
+    const shown = expenses.filter(x =>
+      (category === "All" || x.category === category) &&
+      (monthFilter === "all" || monthKey(x.date) === currentMonth())
+    ).sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+    $("countLabel").textContent = `${shown.length} ${shown.length === 1 ? "entry" : "entries"}`;
+    const list = $("transactionList");
+    list.replaceChildren();
+    if (!shown.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = expenses.length ? "No expenses match these filters." : "No expenses yet. Add your first expense to get started.";
+      list.append(empty); return;
+    }
+    shown.forEach(item => {
+      const row = document.createElement("div"); row.className = "transaction";
+      const left = document.createElement("div"); left.className = "tx-left";
+      const icon = document.createElement("div"); icon.className = "tx-icon"; icon.textContent = categories[item.category];
+      const details = document.createElement("div");
+      const name = document.createElement("div"); name.className = "tx-name"; name.textContent = item.description;
+      const meta = document.createElement("div"); meta.className = "tx-meta"; meta.textContent = `${item.category} · ${item.date}`;
+      details.append(name, meta); left.append(icon, details);
+      const right = document.createElement("div"); right.className = "tx-right";
+      const amount = document.createElement("div"); amount.className = "tx-amount"; amount.textContent = `−${euro(Number(item.amount))}`;
+      const del = document.createElement("button"); del.className = "delete"; del.type = "button"; del.textContent = "Delete";
+      del.setAttribute("aria-label", `Delete ${item.description}`);
+      del.addEventListener("click", () => {
+        if (window.confirm(`Delete "${item.description}"?`)) {
+          expenses = expenses.filter(x => x.id !== item.id); save(); render();
+        }
+      });
+      right.append(amount, del); row.append(left, right); list.append(row);
+    });
+  }
+  $("expenseForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const description = $("description").value.trim();
+    const amount = Number($("amount").value);
+    const category = $("category").value;
+    const date = $("date").value;
+    const notice = $("formNotice"); notice.textContent = "";
+    if (!description) { notice.textContent = "Please enter a description."; $("description").focus(); return; }
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) { notice.textContent = "Enter an amount greater than €0 and no more than €100,000."; $("amount").focus(); return; }
+    if (!categories[category]) { notice.textContent = "Please choose a valid category."; return; }
+    if (!date || date > new Date().toISOString().slice(0,10)) { notice.textContent = "Please choose a valid date that is not in the future."; $("date").focus(); return; }
+    expenses.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()), description, amount: Math.round(amount * 100) / 100, category, date });
+    save(); event.target.reset(); $("date").value = new Date().toISOString().slice(0,10); render();
+    notice.style.color = "var(--green)"; notice.textContent = "Expense added successfully.";
+    $("description").focus();
+  });
+  $("editBudget").addEventListener("click", () => {
+    const answer = window.prompt("Enter your monthly budget in euros:", String(budget));
+    if (answer === null) return;
+    const value = Number(answer);
+    if (!Number.isFinite(value) || value <= 0 || value > 1000000) {
+      window.alert("Please enter a budget greater than €0 and no more than €1,000,000."); return;
+    }
+    budget = Math.round(value * 100) / 100; save(); render();
+  });
+  $("filterCategory").addEventListener("change", renderTransactions);
+  $("filterMonth").addEventListener("change", renderTransactions);
+  $("date").value = new Date().toISOString().slice(0,10);
+  render();
+})();
+</script>
+</body>
+</html>
